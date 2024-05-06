@@ -63,3 +63,12 @@ if __name__ == "__main__":
             cv2.rectangle(img0,(x1, y1), (x2, y2),color,thickness)
             cv2.imshow('test',img0)
             cv2.waitKey(0)
+
+def display_frame_and_wait(image, window_name='Display Window'):
+    """
+    Display the image frame and wait for user input to close the window.
+    """
+    cv2.imshow(window_name, image)
+    print("Press any key to continue...")
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
