@@ -93,6 +93,20 @@ class Model(nn.Module):
     # YOLOv5 model
     def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
         super().__init__()
+        """
+        Initialize YOLOv5 model
+        
+        Parameters
+        ----------
+        cfg : str
+            Path to the model configuration file
+        ch : int
+            Number of input channels
+        nc : int
+            Number of classes
+        anchors : list
+            List of anchor boxes
+        """
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
         else:  # is *.yaml
@@ -130,6 +144,25 @@ class Model(nn.Module):
         LOGGER.info('')
 
     def forward(self, x, augment=False, profile=False, visualize=False):
+        """
+        Perform forward pass through the YOLOv5 model
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
+        augment : bool
+            Flag to enable data augmentation
+        profile : bool
+            Flag to profile model speed
+        visualize : bool
+            Flag to visualize features
+        
+        Returns
+        -------
+        torch.Tensor
+            Model output tensor
+        """
         if augment:
             return self._forward_augment(x)  # augmented inference, None
         return self._forward_once(x, profile, visualize)  # single-scale inference, train
@@ -149,6 +182,23 @@ class Model(nn.Module):
         return torch.cat(y, 1), None  # augmented inference, train
 
     def _forward_once(self, x, profile=False, visualize=False):
+        """
+        Perform a single forward pass through the YOLOv5 model
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
+        profile : bool
+            Flag to profile model speed
+        visualize : bool
+            Flag to visualize features
+        
+        Returns
+        -------
+        torch.Tensor
+            Model output tensor
+        """
         y, dt = [], []  # outputs
         for m in self.model:
             if m.f != -1:  # if not from previous layer
@@ -235,6 +285,16 @@ class Model(nn.Module):
         return self
 
     def info(self, verbose=False, img_size=640):  # print model information
+        """
+        Print information about the YOLOv5 model
+        
+        Parameters
+        ----------
+        verbose : bool
+            Flag to print detailed information
+        img_size : int
+            Size of the input image
+        """
         model_info(self, verbose, img_size)
 
     def _apply(self, fn):
@@ -248,6 +308,18 @@ class Model(nn.Module):
                 m.anchor_grid = list(map(fn, m.anchor_grid))
         return self
 
+    def _initialize_biases(self, cf=None):  # initialize biases into Detect(), cf is class frequency
+        """
+        Initialize biases in the YOLOv5 model
+        
+        Parameters
+        ----------
+        cf : torch.Tensor
+            Class frequency tensor
+        """
+        # https://arxiv.org/abs/1708.02002 section 3.3
+        # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
+        m = self.model[-1]  # Detect() module
 
 def parse_model(d, ch):  # model_dict, input_channels(3)
     LOGGER.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
@@ -330,9 +402,50 @@ if __name__ == '__main__':
     elif opt.test:  # test all models
         for cfg in Path(ROOT / 'models').rglob('yolo*.yaml'):
             try:
+        """
+        Print biases in the YOLOv5 model
+        """
+        m = self.model[-1]  # Detect() module
+        for mi in m.m:  # from
+            b = mi.bias.detach().view(m.na, -1).T  # conv.bias(255) to (3,85)
                 _ = Model(cfg)
             except Exception as e:
                 print(f'Error in {cfg}: {e}')
 
     else:  # report fused model summary
         model.fuse()
+
+        """
+        Concatenate input tensors along a specified dimension
+        
+        Parameters
+        ----------
+        inputs : list
+            List of input tensors to concatenate
+        
+        Returns
+        -------
+        tf.Tensor
+            Concatenated tensor
+        """
+        """
+        Perform upsampling on the input tensor
+        
+        Parameters
+        ----------
+        inputs : tf.Tensor
+            Input tensor to upsample
+        
+        Returns
+        -------
+        tf.Tensor
+            Upsampled tensor
+        """
+    """
+    Main function to run the YOLOv5 model
+    
+    Parameters
+    ----------
+    opt : argparse.Namespace
+        Parsed command line arguments
+    """
